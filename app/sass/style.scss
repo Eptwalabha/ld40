@@ -1,0 +1,24 @@
+body {
+  margin: 0;
+  padding: 0;
+  background: #ccc;
+
+  h1 {
+    text-align: center;
+    margin-top: 5px;
+    margin-bottom: 5px;
+  }
+
+  #game-container {
+    left: 0;
+    right: 0;
+    margin: 10px auto auto;
+    width: 500px;
+
+    & > canvas {
+      &:hover {
+        cursor: none;
+      }
+    }
+  }
+}

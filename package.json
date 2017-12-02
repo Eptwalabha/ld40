@@ -1,0 +1,38 @@
+{
+  "name": "ept-ld40",
+  "version": "0.0.0",
+  "description": "Ludum dare 40",
+  "main": "ld40.js",
+  "keywords": [],
+  "author": "eptwalabha (https://github.com/eptwalabha)",
+  "license": "MIT",
+  "scripts": {
+    "clean": "shx rm -rf dist lib",
+    "build-webpack": "webpack && rm -rf dist/js/lib",
+    "build-assets": "gulp",
+    "build": "npm run clean && npm run build-webpack && npm run build-assets",
+    "test": "npm run build-tsc && mocha tests/**/*_test.js"
+  },
+  "dependencies": {
+    "ept-ecs": "^1.1.2",
+    "pixi.js": "^4.6.1"
+  },
+  "devDependencies": {
+    "@types/pixi.js": "^4.6.0",
+    "del": "^3.0.0",
+    "gulp": "github:gulpjs/gulp#4.0",
+    "gulp-clean-css": "^3.6.0",
+    "gulp-rename": "^1.2.2",
+    "gulp-sass": "^3.1.0",
+    "gulp-useref": "^3.1.2",
+    "node-static": "^0.7.9",
+    "spritesheet-js": "^1.2.2",
+    "ts-loader": "^3.1.1",
+    "typescript": "^2.4.1",
+    "chai": "^4.1.2",
+    "mocha": "^4.0.1",
+    "sinon": "^4.1.2",
+    "shx": "^0.2.2",
+    "webpack": "^3.8.1"
+  }
+}
