@@ -47,7 +47,7 @@ let level1: LevelSpec = {
 };
 
 let level2: LevelSpec = {
-    name: "rule n°1: there are no rules",
+    name: "rule n°2: but rules stack up",
     pieces: {
         placed: [
             {
@@ -60,7 +60,12 @@ let level2: LevelSpec = {
         random: [
             {
                 color: PieceColor.BLUE,
-                amount: 8
+                form: PieceForm.CIRCLE,
+                amount: 3
+            },
+            {
+                color: PieceColor.BLUE,
+                amount: 5
             },
             {
                 color: PieceColor.RED,
@@ -79,6 +84,21 @@ let level2: LevelSpec = {
                 type: RuleType.NEIGHBOURS,
                 against: RuleAgainst.AGAINST,
                 amount: 5
+            },
+            against: {
+                color: PieceColor.RED,
+                form: PieceForm.SQUARE
+            }
+        },
+        {
+            type: {
+                color: PieceColor.BLUE,
+                form: PieceForm.CIRCLE
+            },
+            rule: {
+                type: RuleType.NEIGHBOURS,
+                against: RuleAgainst.AGAINST,
+                amount: 2
             },
             against: {
                 color: PieceColor.RED,

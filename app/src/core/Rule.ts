@@ -48,14 +48,17 @@ export class Rule {
     private isPieceAffected: (piece: Piece) => boolean;
     private isPieceAgainst: (piece: Piece) => boolean;
     private validator: (x: number, y: number, disposition: Array<Array<RulePieceType>>) => boolean;
-    private valid: boolean;
     private disposition: Array<Array<RulePieceType>>;
+
+    public valid: boolean;
+    public active: boolean;
 
     public constructor (spec: RuleSpec) {
         this.valid = false;
         this.isPieceAffected = this.buildPieceMatcher(spec.type, false);
         this.isPieceAgainst = this.buildPieceMatcher(spec.against, true);
         this.validator = this.buildValidator(spec.rule);
+        this.active = false;
     }
 
     private buildValidator(spec: RuleTypeSpec): (x: number, y: number, disposition: Array<Array<RulePieceType>>) => boolean {
@@ -132,7 +135,7 @@ export class Rule {
                 if (this.disposition[x][y] !== RulePieceType.MATCHING) continue;
                 let p = disposition[x][y];
                 if (this.validator(x, y, this.disposition)) {
-                    p.setMood(PieceMood.FRIENDLY);
+                    p.setMood(PieceMood.HAPPY);
                 } else {
                     p.setMood(PieceMood.ANGRY);
                     valid = false;
@@ -140,5 +143,9 @@ export class Rule {
             }
         }
         return valid;
+    }
+
+    setActive(active: boolean) {
+        this.active = active
     }
 }

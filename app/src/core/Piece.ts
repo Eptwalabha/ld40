@@ -17,7 +17,7 @@ export enum PieceColor {
 
 export enum PieceMood {
     NEUTRAL,
-    FRIENDLY,
+    HAPPY,
     ANGRY
 }
 
@@ -47,10 +47,12 @@ export class Piece extends PIXI.Container {
     private tint: number;
     private mood: PieceMood;
     private spec: PieceSpec;
+    private origin: PIXI.Point;
 
     public alphaFilter: PIXI.filters.AlphaFilter;
     public draggable: boolean;
     public satisfy: boolean;
+    private offset: PIXI.Point;
 
     constructor(board: Board, spec: PieceSpec) {
         super();
@@ -59,9 +61,11 @@ export class Piece extends PIXI.Container {
         this.board = board;
         this.x = spec.position.x * this.board.cell.x;
         this.y = spec.position.y * this.board.cell.y;
+        this.origin = new PIXI.Point(this.x, this.y);
         this.draggable = spec.draggable === undefined ? true : spec.draggable;
         this.name = this.board.getId();
         this.spec = spec;
+        this.offset = new PIXI.Point();
 
         this.deltaValue = Math.random() * 1000;
         this.buildPIXIContainer();
@@ -77,9 +81,18 @@ export class Piece extends PIXI.Container {
         this.blinkIn -= delta;
         if (this.mood === PieceMood.ANGRY) {
             this.rotation = Math.sin(this.deltaValue * 20) / 5;
+            this.offset.set(0, 0);
+        } else if (this.mood === PieceMood.HAPPY) {
+            let sin = Math.sin(this.deltaValue * 10);
+            this.rotation = sin / 5;
+            this.offset.y = -Math.abs(sin * (this.board.cell.y / 2));
+            // this.offset.x = sin * (this.board.cell.y / 3);
         } else {
             this.rotation = 0;
+            this.offset.set(0, 0);
         }
+        this.x = this.origin.x + this.offset.x;
+        this.y = this.origin.y + this.offset.y;
         this.blink();
     }
 
@@ -95,14 +108,16 @@ export class Piece extends PIXI.Container {
     public setPosition(x: number, y: number) {
         this.x = x;
         this.y = y;
+        this.origin.set(this.x, this.y);
     }
 
     private buildPIXIContainer() {
-        let atlas: PIXI.loaders.TextureDictionary = PIXI.loader.resources["piece"].textures;
-        this.sprite = new PIXI.Sprite(atlas[`form-${this.form}.png`]);
+        let atlas = PIXI.loader.resources["piece"];
+        this.sprite = new PIXI.Sprite(atlas.textures[`form-${this.form}.png`]);
         this.sprite.tint = this.color;
         this.sprite.anchor.set(0.5);
-        this.eyes = new PIXI.Sprite(atlas[`eye.png`]);
+        this.mood = PieceMood.NEUTRAL;
+        this.eyes = new PIXI.Sprite(atlas.textures[this.eyeType()]);
         this.eyes.anchor.set(0.5);
         this.eyes.scale.set(0.8);
         this.eyes.position.set(0, this.sprite.height / -3);
@@ -132,18 +147,13 @@ export class Piece extends PIXI.Container {
     }
 
     private updateMoodPiece() {
-        switch (this.mood) {
-            case PieceMood.ANGRY:
-                this.eyes.texture = PIXI.loader.resources["piece"].textures["eye-angry.png"];
-                break;
-            default:
-                this.eyes.texture = PIXI.loader.resources["piece"].textures["eye.png"];
-                break;
-        }
+        let texture: string = this.eyeType();
+        this.eyes.texture = PIXI.loader.resources["piece"].textures[texture];
     }
 
     private eyeType() {
         if (this.mood === PieceMood.ANGRY) return "eye-angry.png";
-        return "eye.png";
+        if (this.mood === PieceMood.HAPPY) return "eye-happy.png";
+        return "eye-regular.png";
     }
 }
