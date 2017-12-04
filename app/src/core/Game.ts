@@ -15,7 +15,7 @@ export class Game {
     }
 
     public start() {
-        this.current.init();
+        this.current.init(this.app);
         this.pause = false;
     }
 
@@ -33,7 +33,7 @@ export class Game {
             this.current.stop();
         }
         this.current = state;
-        this.current.init();
+        this.current.init(this.app);
     }
 
     public pauseGame() {

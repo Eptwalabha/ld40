@@ -22,14 +22,16 @@ export enum PieceMood {
 }
 
 export interface PieceSpec {
-    type: PieceForm,
+    form: PieceForm,
     color: PieceColor,
     draggable?: boolean,
-    position?: PIXI.Point
+    position: PIXI.Point
 }
 
 export interface RandomPieceSpec {
-    spec: PieceSpec,
+    form?: PieceForm,
+    color?: PieceColor,
+    draggable?: boolean,
     amount: number
 }
 
@@ -44,25 +46,29 @@ export class Piece extends PIXI.Container {
     private blinkIn: number;
     private tint: number;
     private mood: PieceMood;
+    private spec: PieceSpec;
 
     public alphaFilter: PIXI.filters.AlphaFilter;
     public draggable: boolean;
     public satisfy: boolean;
 
-    constructor(board: Board, form: PieceForm, color: PieceColor) {
+    constructor(board: Board, spec: PieceSpec) {
         super();
-        this.form = form;
-        this.color = color;
-        this.x = 0;
-        this.y = 0;
-        this.deltaValue = Math.random() * 1000;
+        this.form = spec.form;
+        this.color = spec.color;
         this.board = board;
+        this.x = spec.position.x * this.board.cell.x;
+        this.y = spec.position.y * this.board.cell.y;
+        this.draggable = spec.draggable === undefined ? true : spec.draggable;
+        this.name = this.board.getId();
+        this.spec = spec;
+
+        this.deltaValue = Math.random() * 1000;
         this.buildPIXIContainer();
         this.alphaFilter = new PIXI.filters.AlphaFilter(1);
         this.filters = [this.alphaFilter];
         this.blinkIn = Math.random() * 19;
         this.satisfy = true;
-        this.draggable = true;
         this.mood = PieceMood.NEUTRAL;
     }
 
@@ -87,10 +93,6 @@ export class Piece extends PIXI.Container {
     public setPosition(x: number, y: number) {
         this.x = x;
         this.y = y;
-    }
-
-    public isAt(x: number, y: number): boolean {
-        return this.x === x && this.y === y;
     }
 
     private buildPIXIContainer() {

@@ -1,35 +1,32 @@
-import {Piece, PieceForm, PieceColor, PieceMood} from "./Piece";
-import {RuleSpec, Rule, RuleType, RuleAgainst} from "./Rule";
-import {levels} from "../Levels";
-
-export interface BoardSpec {
-    size: number
-}
+import {Piece, PieceMood, PieceSpec, RandomPieceSpec} from "./Piece";
+import {RuleSpec, Rule} from "./Rule";
+import {LevelSpec, PiecesSpec} from "../Levels";
+import {PieceFactory} from "./PieceFactory";
 
 export class Board extends PIXI.Container {
 
-    private boardWidth: number;
-    private boardHeight: number;
+    boardWidth: number;
+    boardHeight: number;
     private pieces: Array<Piece>;
-    private active: boolean;
     private dragging: boolean;
-    private cell: PIXI.Point;
+    public cell: PIXI.Point;
     private disposition: Array<Array<Piece>>;
     private selectedPiece: any;
     private rules: Array<Rule>;
+    private id: number;
 
-    constructor(width: number = 10, height: number = 10) {
+    constructor(level: LevelSpec) {
         super();
-        this.boardWidth = width;
-        this.boardHeight = height;
-        this.pieces = [];
-        this.position.set(50, 50);
+        this.boardWidth = level.boardDimension.x;
+        this.boardHeight = level.boardDimension.y;
+
         this.cell = new PIXI.Point(40, 40);
-        this.active = true;
         this.dragging = false;
-        this.disposition = [];
-        this.rules = [];
-        console.log(levels);
+
+        this.initPieces(level.pieces);
+        this.initInteractivity();
+        this.initRules(level.rules);
+        this.checkRules();
     }
 
     update (delta: number) {
@@ -41,46 +38,51 @@ export class Board extends PIXI.Container {
         }
     }
 
-    init(spec: BoardSpec) {
-        this.initPieces(spec);
-        this.initInteractivity();
-        this.initRules(spec);
-        this.checkRules();
+    private initPieces(spec: PiecesSpec) {
+        this.id = 0;
+        this.resetDisposition();
+        this.initPlacedPieces(spec.placed);
+        this.initRandomPieces(spec.random);
     }
 
-    private initPieces(spec: BoardSpec) {
-        let forms = [
-            PieceForm.SQUARE,
-            PieceForm.CIRCLE,
-            PieceForm.TRIANGLE,
-            PieceForm.STAR
-        ];
-        let colors = [
-            PieceColor.RED,
-            PieceColor.GREEN,
-            PieceColor.BLUE,
-            PieceColor.WHITE,
-            PieceColor.BLACK
-        ];
+    private resetDisposition() {
         this.pieces = [];
         this.disposition = [];
         for (let i = 0; i < this.boardWidth; ++i) {
             this.disposition[i] = [];
-            for (let j = 0; j < this.boardWidth; ++j) {
+            for (let j = 0; j < this.boardHeight; ++j) {
                 this.disposition[i][j] = null;
             }
         }
-        for (let i = 0; i < spec.size; ++i) {
-            let form = forms[Math.floor(Math.random() * forms.length)];
-            let color = colors[Math.floor(Math.random() * colors.length)];
-            let piece = new Piece(this, form, color);
-            let x = i % this.boardWidth;
-            let y = Math.floor(i / this.boardWidth);
-            piece.setPosition(x * this.cell.x, y * this.cell.y);
-            piece.name = `piece-${i}`;
+    }
+
+    private initPlacedPieces(spec: Array<PieceSpec>) {
+        for (let pieceSpec of spec) {
+            let piece: Piece = new Piece(this, pieceSpec);
+            this.disposition[pieceSpec.position.x][pieceSpec.position.y] = piece;
             this.pieces.push(piece);
-            this.disposition[x][y] = piece;
             this.addChild(piece);
+        }
+    }
+
+    public getId () {
+        return `piece-${++this.id}`;
+    }
+
+    private initRandomPieces(specs: Array<RandomPieceSpec>) {
+        for (let randomSpec of specs) {
+            let amount = randomSpec.amount;
+            for (let i = 0; i < amount; ++i) {
+                let freePosition = this.getFreePosition();
+                if (freePosition === null) {
+                    return;
+                }
+                let piece: Piece = PieceFactory.buildFromRandomSpec(this, randomSpec);
+                piece.setPosition(freePosition.x * this.cell.x, freePosition.y * this.cell.y);
+                this.disposition[freePosition.x][freePosition.y] = piece;
+                this.pieces.push(piece);
+                this.addChild(piece);
+            }
         }
     }
 
@@ -90,31 +92,35 @@ export class Board extends PIXI.Container {
             .on('pointermove', this.dragmove, this);
         this.interactive = true;
     }
-    private initRules(spec: BoardSpec) {
-        let ruleSpec: RuleSpec = {
-            type: {
-                color: PieceColor.RED
-            },
-            rule: {
-                type: RuleType.GROUP,
-                range: {
-                    min: 3
-                }
-            }
-        };
-        let ruleSpec2: RuleSpec = {
-            type: {
-                color: PieceColor.GREEN
-            },
-            rule: {
-                type: RuleType.NONE
-            },
-            against: {
-                color: PieceColor.BLUE
-            }
-        };
-        this.rules.push(new Rule(ruleSpec));
-        this.rules.push(new Rule(ruleSpec2));
+    private initRules(rules: Array<RuleSpec>) {
+        this.rules = [];
+        for (let rule of rules) {
+            this.rules.push(new Rule(rule));
+        }
+        // let ruleSpec: RuleSpec = {
+        //     type: {
+        //         color: PieceColor.RED
+        //     },
+        //     rule: {
+        //         type: RuleType.GROUP,
+        //         range: {
+        //             min: 3
+        //         }
+        //     }
+        // };
+        // let ruleSpec2: RuleSpec = {
+        //     type: {
+        //         color: PieceColor.GREEN
+        //     },
+        //     rule: {
+        //         type: RuleType.NONE
+        //     },
+        //     against: {
+        //         color: PieceColor.BLUE
+        //     }
+        // };
+        // this.rules.push(new Rule(ruleSpec));
+        // this.rules.push(new Rule(ruleSpec2));
     }
 
     private dragstart(event) {
@@ -212,5 +218,20 @@ export class Board extends PIXI.Container {
                 p.setMood(PieceMood.NEUTRAL, true);
             }
         }
+    }
+
+    private getFreePosition(): PIXI.Point {
+        let freeIndex = [];
+        for (let x = 0; x < this.disposition.length; ++x) {
+            for (let y = 0; y < this.disposition[x].length; ++y) {
+                if (this.disposition[x][y] === null) {
+                    freeIndex.push(new PIXI.Point(x, y));
+                }
+            }
+        }
+        if (freeIndex.length === 0) {
+            return null;
+        }
+        return freeIndex[Math.floor(Math.random() * freeIndex.length)];
     }
 }
