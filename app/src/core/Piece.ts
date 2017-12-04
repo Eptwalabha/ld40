@@ -77,6 +77,8 @@ export class Piece extends PIXI.Container {
         this.blinkIn -= delta;
         if (this.mood === PieceMood.ANGRY) {
             this.rotation = Math.sin(this.deltaValue * 20) / 5;
+        } else {
+            this.rotation = 0;
         }
         this.blink();
     }

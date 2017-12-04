@@ -14,6 +14,10 @@ export class Board extends PIXI.Container {
     private selectedPiece: any;
     private rules: Array<Rule>;
     private id: number;
+    private backgroundContainer: PIXI.Container;
+    private boardContainer: PIXI.Container;
+    private piecesContainer: PIXI.Container;
+    private movingPieceContainer: PIXI.Container;
 
     constructor(level: LevelSpec) {
         super();
@@ -23,8 +27,10 @@ export class Board extends PIXI.Container {
         this.cell = new PIXI.Point(40, 40);
         this.dragging = false;
 
+        this.createContainers();
         this.initPieces(level.pieces);
         this.initInteractivity();
+        this.initBoardContainer();
         this.initRules(level.rules);
         this.checkRules();
     }
@@ -32,9 +38,7 @@ export class Board extends PIXI.Container {
     update (delta: number) {
         let deltaMs = delta / 1000;
         for (let piece of this.pieces) {
-            if (piece.draggable) {
-                piece.update(deltaMs);
-            }
+            piece.update(deltaMs);
         }
     }
 
@@ -81,7 +85,7 @@ export class Board extends PIXI.Container {
                 piece.setPosition(freePosition.x * this.cell.x, freePosition.y * this.cell.y);
                 this.disposition[freePosition.x][freePosition.y] = piece;
                 this.pieces.push(piece);
-                this.addChild(piece);
+                this.piecesContainer.addChild(piece);
             }
         }
     }
@@ -233,5 +237,34 @@ export class Board extends PIXI.Container {
             return null;
         }
         return freeIndex[Math.floor(Math.random() * freeIndex.length)];
+    }
+
+    private createContainers() {
+        this.backgroundContainer = new PIXI.Container();
+        this.boardContainer = new PIXI.Container();
+        this.piecesContainer = new PIXI.Container();
+        this.movingPieceContainer = new PIXI.Container();
+        this.addChild(this.backgroundContainer, this.boardContainer, this.piecesContainer, this.movingPieceContainer);
+    }
+
+    private initBoardContainer() {
+        let atlas = PIXI.loader.resources["board"];
+        for (let x = 0; x < this.disposition.length; ++x) {
+            for (let y = 0; y < this.disposition[x].length; ++y) {
+                let tile: PIXI.Sprite = new PIXI.Sprite(atlas.textures[Board.tileName(this.disposition[x][y])]);
+                tile.anchor.set(0.5);
+                let scaleX = this.cell.x / tile.width;
+                let scaleY = this.cell.y / tile.height;
+                tile.position.set(x * this.cell.x, y * this.cell.y);
+                tile.scale.set(scaleX, scaleY);
+                this.boardContainer.addChild(tile);
+            }
+        }
+    }
+
+    private static tileName(piece: Piece): string {
+        let prefix = (piece === null || piece.draggable) ? "regular" : "static";
+        let num = Math.floor(Math.random() * 4);
+        return `tile-${prefix}-${num}.png`;
     }
 }

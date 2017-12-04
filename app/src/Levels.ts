@@ -63,7 +63,8 @@ let level2: LevelSpec = {
                 amount: 8
             },
             {
-                color: PieceColor.GREEN,
+                color: PieceColor.RED,
+                form: PieceForm.SQUARE,
                 amount: 8
             }
         ]
@@ -71,14 +72,17 @@ let level2: LevelSpec = {
     rules: [
         {
             type: {
-                color: PieceColor.RED
+                color: PieceColor.RED,
+                form: PieceForm.CIRCLE
             },
             rule: {
-                type: RuleType.SURROUNDED,
-                against: RuleAgainst.AGAINST
+                type: RuleType.NEIGHBOURS,
+                against: RuleAgainst.AGAINST,
+                amount: 5
             },
             against: {
-                type: PieceColor.BLUE
+                color: PieceColor.RED,
+                form: PieceForm.SQUARE
             }
         }
     ],
