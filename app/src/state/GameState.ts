@@ -3,12 +3,10 @@ import {Board, BoardSpec} from "../core/Board";
 
 export class GameState extends State {
 
-    private atlasGame: PIXI.loaders.TextureDictionary;
     private stage: PIXI.Container;
     private board: Board;
 
     init(app: PIXI.Application): void {
-        this.atlasGame = PIXI.loader.resources["atlas-game"].textures;
         this.stage = new PIXI.Container();
         this.game.app.stage = this.stage;
         this.initScene();

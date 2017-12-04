@@ -21,6 +21,18 @@ export enum PieceMood {
     ANGRY
 }
 
+export interface PieceSpec {
+    type: PieceForm,
+    color: PieceColor,
+    draggable?: boolean,
+    position?: PIXI.Point
+}
+
+export interface RandomPieceSpec {
+    spec: PieceSpec,
+    amount: number
+}
+
 export class Piece extends PIXI.Container {
 
     public form: PieceForm;

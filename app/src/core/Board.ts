@@ -1,5 +1,6 @@
 import {Piece, PieceForm, PieceColor, PieceMood} from "./Piece";
-import {RuleSpec, Rule} from "./Rule";
+import {RuleSpec, Rule, RuleType, RuleAgainst} from "./Rule";
+import {levels} from "../Levels";
 
 export interface BoardSpec {
     size: number
@@ -28,6 +29,7 @@ export class Board extends PIXI.Container {
         this.dragging = false;
         this.disposition = [];
         this.rules = [];
+        console.log(levels);
     }
 
     update (delta: number) {
@@ -91,13 +93,21 @@ export class Board extends PIXI.Container {
     private initRules(spec: BoardSpec) {
         let ruleSpec: RuleSpec = {
             type: {
-                color: PieceColor.RED,
-                form: PieceForm.STAR
+                color: PieceColor.RED
+            },
+            rule: {
+                type: RuleType.GROUP,
+                range: {
+                    min: 3
+                }
             }
         };
         let ruleSpec2: RuleSpec = {
             type: {
                 color: PieceColor.GREEN
+            },
+            rule: {
+                type: RuleType.NONE
             },
             against: {
                 color: PieceColor.BLUE

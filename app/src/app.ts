@@ -50,8 +50,9 @@ window.onload = () => {
     };
 
     PIXI.loader
-        .add("atlas-game", "/assets/atlas/game.json")
+        .add("board", "/assets/atlas/board.json")
         .add("piece", "/assets/atlas/piece.json")
+        .add("ui", "/assets/atlas/ui.json")
         .load(function() {
             let options: PIXI.RendererOptions = {
                 // antialias: true,

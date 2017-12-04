@@ -1,15 +1,41 @@
 import {Piece, PieceForm, PieceColor, PieceMood} from "./Piece";
+import {RuleFactory} from "./RuleFactory";
 
-enum Type {
+export enum RulePieceType {
     EMPTY,
     MATCHING,
     OTHER,
     AGAINST
 }
 
+export enum RuleType {
+    SURROUNDED,
+    NONE,
+    NEIGHBOURS,
+    GROUP
+}
+
+export enum RuleAgainst {
+    SAME,
+    AGAINST
+}
+
+export interface RuleRange {
+    min?: number,
+    max?: number
+}
+
+export interface RuleTypeSpec {
+    type: RuleType,
+    against?: RuleAgainst,
+    amount?: number,
+    range?: RuleRange
+}
+
 export interface RuleSpec {
     type: PieceType,
-    against?: PieceType
+    against?: PieceType,
+    rule: RuleTypeSpec
 }
 
 export interface PieceType {
@@ -21,13 +47,31 @@ export class Rule {
 
     private isPieceAffected: (piece: Piece) => boolean;
     private isPieceAgainst: (piece: Piece) => boolean;
+    private validator: (x: number, y: number, disposition: Array<Array<RulePieceType>>) => boolean;
     private valid: boolean;
-    private disposition: Array<Array<Type>>;
+    private disposition: Array<Array<RulePieceType>>;
 
     public constructor (spec: RuleSpec) {
         this.valid = false;
         this.isPieceAffected = this.buildPieceMatcher(spec.type, false);
         this.isPieceAgainst = this.buildPieceMatcher(spec.against, true);
+        this.validator = this.buildValidator(spec.rule);
+    }
+
+    private buildValidator(spec: RuleTypeSpec): (x: number, y: number, disposition: Array<Array<RulePieceType>>) => boolean {
+        switch (spec.type) {
+            case RuleType.NONE:
+                return RuleFactory.get_none(spec.against);
+            case RuleType.NEIGHBOURS:
+                return RuleFactory.get_neighbours(spec.against, spec.amount);
+            case RuleType.SURROUNDED:
+                return RuleFactory.get_surrounded(spec.against);
+            case RuleType.GROUP:
+                return RuleFactory.get_group(spec.range);
+        }
+        return function() {
+            return false;
+        }
     }
 
     private buildPieceMatcher(type: PieceType, matchAll: boolean): (piece: Piece) => boolean {
@@ -69,12 +113,12 @@ export class Rule {
             for (let y = 0; y < disposition[x].length; ++y) {
                 let p = disposition[x][y];
                 if (p === null) {
-                    this.disposition[x][y] = Type.EMPTY;
+                    this.disposition[x][y] = RulePieceType.EMPTY;
                 } else {
                     if (this.isPieceAffected(p)) {
-                        this.disposition[x][y] = Type.MATCHING;
+                        this.disposition[x][y] = RulePieceType.MATCHING;
                     } else {
-                        this.disposition[x][y] = this.isPieceAgainst(p) ? Type.AGAINST : Type.OTHER;
+                        this.disposition[x][y] = this.isPieceAgainst(p) ? RulePieceType.AGAINST : RulePieceType.OTHER;
                     }
                 }
             }
@@ -85,9 +129,9 @@ export class Rule {
         let valid: boolean = true;
         for (let x = 0; x < this.disposition.length; ++x) {
             for (let y = 0; y < this.disposition.length; ++y) {
-                if (this.disposition[x][y] !== Type.MATCHING) continue;
+                if (this.disposition[x][y] !== RulePieceType.MATCHING) continue;
                 let p = disposition[x][y];
-                if (this.checkPieceValidity(p)) {
+                if (this.validator(x, y, this.disposition)) {
                     p.setMood(PieceMood.FRIENDLY);
                 } else {
                     p.setMood(PieceMood.ANGRY);
@@ -96,9 +140,5 @@ export class Rule {
             }
         }
         return valid;
-    }
-
-    private checkPieceValidity(piece: Piece) {
-        return false;
     }
 }
