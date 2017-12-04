@@ -1,67 +1,67 @@
-import * as PIXI from "pixi.js/lib";
-import {World} from "ept-ecs/lib";
+import {GameState} from "./state/GameState";
+import {Game} from "./core/Game";
+import {LoadingState} from "./state/LoadingState";
+import {MenuState} from "./state/MenuState";
+import {GameOverState} from "./state/GameOverState";
+import {PauseState} from "./state/PauseState";
 
-class SimpleGame {
-    constructor() {}
-}
-
-var options: PIXI.RendererOptions = {
-    antialias: true,
-    transparent: true
-};
 PIXI.settings.SCALE_MODE = PIXI.SCALE_MODES.NEAREST;
-var app: PIXI.Application = new PIXI.Application(500, 500, options);
-var atlasGame;
-
 window.onload = () => {
 
-    var setup = function () {
-        new SimpleGame();
-        document.getElementById("game-container").appendChild(app.view);
-        var robot = new PIXI.Sprite(PIXI.loader.resources["robot"].texture);
-        atlasGame = PIXI.loader.resources["atlas-game"].textures;
+    let setup = function (app: PIXI.Application) {
+        let game = new Game(app);
+        game.addState("loading", new LoadingState(), true);
+        game.addState("menu", new MenuState());
+        game.addState("game", new GameState());
+        game.addState("pause", new PauseState());
+        game.addState("game over", new GameOverState());
+        game.start();
 
-        var sprite1 = new PIXI.Sprite(atlasGame["image1.png"]);
-        var sprite2 = new PIXI.Sprite(atlasGame["image2.png"]);
-        var sprite3 = new PIXI.Sprite(atlasGame["image3.png"]);
+        let delta,
+            lastTs = Date.now();
+        let run = function () {
+            let now = Date.now();
+            delta = now - lastTs;
+            lastTs = now;
+            game.update(delta);
+            requestAnimationFrame(run);
+        };
+        hookTabChange(game);
+        requestAnimationFrame(run);
 
-        robot.anchor.set(0.5);
-        robot.position.set(250, 250);
+    };
 
-        var container = new PIXI.Container();
-        sprite1.anchor.set(0.5);
-        sprite3.anchor.set(0.5);
-        container.addChild(sprite1);
-        container.addChild(sprite3);
-        sprite1.position.set(-5, -5);
-        sprite3.position.set(5, 5);
-        container.position.set(250, 250);
-        container.scale.set(10, 10);
-        container.filters = [new PIXI.filters.AlphaFilter(0.6)];
-
-        sprite2.anchor.set(0.5);
-        sprite2.position.set(250, 250);
-        sprite2.scale.set(12, 12);
-
-        app.stage.addChild(sprite2);
-        app.stage.addChild(container);
-        app.stage.addChild(robot);
-
-        app.ticker.add(function (delta) {
-            sprite1.rotation -= 0.02 * delta;
-            sprite3.rotation += 0.01 * delta;
+    let hookTabChange = function (game: Game) {
+        let visibilityChange;
+        if (typeof document.hidden !== "undefined") { // Opera 12.10 and Firefox 18 and later support
+            visibilityChange = "visibilitychange";
+        } else if (typeof document.msHidden !== "undefined") {
+            visibilityChange = "msvisibilitychange";
+        } else {
+            return;
+        }
+        document.addEventListener(visibilityChange, function () {
+            if (document.hidden) {
+                game.pauseGame();
+            } else {
+                game.resumeGame();
+            }
         });
-        console.log("ok", PIXI);
     };
 
     PIXI.loader
-        .add("robot", "/assets/images/robot.png")
         .add("atlas-game", "/assets/atlas/game.json")
-        .load(setup);
-
-    var world = new World();
-    console.log(world.create());
-    console.log(world.create());
-    console.log(world.create());
-    console.log("lol");
+        .add("piece", "/assets/atlas/piece.json")
+        .load(function() {
+            let options: PIXI.RendererOptions = {
+                // antialias: true,
+                transparent: true,
+                view: document.getElementById("game-canvas") as HTMLCanvasElement,
+                width: 600,
+                height: 450
+            };
+            let app: PIXI.Application = new PIXI.Application(options);
+            document.getElementById("game-container").appendChild(app.view);
+            setup(app);
+        });
 };

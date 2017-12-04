@@ -22,6 +22,9 @@ var tsConfig = {
     resolve: {
         extensions: [".ts", ".js"]
     },
+    externals: {
+        'pixi.js/lib': "pixijs"
+    },
     devtool: "source-map",
     plugins: [
         new webpack.optimize.UglifyJsPlugin({
@@ -34,7 +37,12 @@ var tsConfig = {
         rules: [
             {
                 test: /\.ts$/,
-                use: [{ loader: "ts-loader" }]
+                use: [{
+                    loader: "ts-loader",
+                    options: {
+                        transpileOnly: true
+                    }
+                }]
             }
         ]
     }
