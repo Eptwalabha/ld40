@@ -1,4 +1,5 @@
-import {Piece} from "./Piece";
+import {Piece, PieceForm, PieceColor, PieceMood} from "./Piece";
+import {RuleSpec, RuleAffect, Rule} from "./Rule";
 
 export interface BoardSpec {
     size: number
@@ -14,6 +15,7 @@ export class Board extends PIXI.Container {
     private cell: PIXI.Point;
     private disposition: Array<Array<Piece>>;
     private selectedPiece: any;
+    private rules: Array<Rule>;
 
     constructor(width: number = 10, height: number = 10) {
         super();
@@ -21,10 +23,11 @@ export class Board extends PIXI.Container {
         this.boardHeight = height;
         this.pieces = [];
         this.position.set(50, 50);
-        this.cell = new PIXI.Point(32, 32);
+        this.cell = new PIXI.Point(40, 40);
         this.active = true;
         this.dragging = false;
         this.disposition = [];
+        this.rules = [];
     }
 
     update (delta: number) {
@@ -37,13 +40,25 @@ export class Board extends PIXI.Container {
     }
 
     init(spec: BoardSpec) {
-        let forms = ["square", "triangle", "circle", "star"];
+        this.initPieces(spec);
+        this.initInteractivity();
+        this.initRules(spec);
+        this.checkRules();
+    }
+
+    private initPieces(spec: BoardSpec) {
+        let forms = [
+            PieceForm.SQUARE,
+            PieceForm.CIRCLE,
+            PieceForm.TRIANGLE,
+            PieceForm.STAR
+        ];
         let colors = [
-            0xff0000,
-            0x00ff00,
-            0x0000ff,
-            0xffffff,
-            0x888888,
+            PieceColor.RED,
+            PieceColor.GREEN,
+            PieceColor.BLUE,
+            PieceColor.WHITE,
+            PieceColor.BLACK
         ];
         this.pieces = [];
         this.disposition = [];
@@ -60,21 +75,26 @@ export class Board extends PIXI.Container {
             let x = i % this.boardWidth;
             let y = Math.floor(i / this.boardWidth);
             piece.setPosition(x * this.cell.x, y * this.cell.y);
-            piece.name = `toto-${i}`;
+            piece.name = `piece-${i}`;
             this.pieces.push(piece);
             this.disposition[x][y] = piece;
             this.addChild(piece);
-            piece.draggable = (i % 3 !== 0);
-            if (i % 3 === 0) {
-                piece.alphaFilter.alpha = 0.5;
-            }
         }
+    }
+
+    private initInteractivity() {
         this.on('pointerdown', this.dragstart, this)
             .on('pointerup', this.dragend, this)
             .on('pointermove', this.dragmove, this);
-
         this.interactive = true;
-        console.log(`size ${this.width}, ${this.height}`);
+    }
+    private initRules(spec: BoardSpec) {
+        let ruleSpec: RuleSpec = {
+            affect: RuleAffect.FORM,
+            color: PieceColor.RED,
+            form: PieceForm.STAR
+        };
+        this.rules.push(new Rule(ruleSpec));
     }
 
     private dragstart(event) {
@@ -145,6 +165,7 @@ export class Board extends PIXI.Container {
                 let y = this.selectedPiece.origin.y * this.cell.y;
                 this.selectedPiece.piece.setPosition(x, y);
             }
+            this.checkRules();
         }
     }
 
@@ -153,6 +174,23 @@ export class Board extends PIXI.Container {
             let position = event.data.getLocalPosition(this);
             let boardPosition: PIXI.Point = this.positionToBoard(position.x, position.y, true);
             this.selectedPiece.piece.setPosition(boardPosition.x * this.cell.x, boardPosition.y * this.cell.y);
+        }
+    }
+
+    private checkRules() {
+        this.resetAllPiecesMood();
+        for (let rule of this.rules) {
+            rule.checkDispositionAgainstRule(this.disposition);
+        }
+    }
+
+    private resetAllPiecesMood() {
+        for (let x = 0; x < this.disposition.length; ++x) {
+            for (let y = 0; y < this.disposition[x].length; ++y) {
+                let p = this.disposition[x][y];
+                if (p === null) continue;
+                p.setMood(PieceMood.NEUTRAL, true);
+            }
         }
     }
 }
