@@ -1,5 +1,5 @@
 import {Piece, PieceForm, PieceColor, PieceMood} from "./Piece";
-import {RuleSpec, RuleAffect, Rule} from "./Rule";
+import {RuleSpec, Rule} from "./Rule";
 
 export interface BoardSpec {
     size: number
@@ -90,11 +90,21 @@ export class Board extends PIXI.Container {
     }
     private initRules(spec: BoardSpec) {
         let ruleSpec: RuleSpec = {
-            affect: RuleAffect.FORM,
-            color: PieceColor.RED,
-            form: PieceForm.STAR
+            type: {
+                color: PieceColor.RED,
+                form: PieceForm.STAR
+            }
+        };
+        let ruleSpec2: RuleSpec = {
+            type: {
+                color: PieceColor.GREEN
+            },
+            against: {
+                color: PieceColor.BLUE
+            }
         };
         this.rules.push(new Rule(ruleSpec));
+        this.rules.push(new Rule(ruleSpec2));
     }
 
     private dragstart(event) {

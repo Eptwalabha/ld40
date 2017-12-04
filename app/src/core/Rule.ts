@@ -1,63 +1,58 @@
 import {Piece, PieceForm, PieceColor, PieceMood} from "./Piece";
-export enum RuleAffect {
-    COLOR,
-    FORM,
-    FORM_AND_COLOR,
-    ALL
-}
 
 enum Type {
     EMPTY,
     MATCHING,
     OTHER,
-    CONFLICT
+    AGAINST
 }
 
 export interface RuleSpec {
+    type: PieceType,
+    against?: PieceType
+}
+
+export interface PieceType {
     form?: PieceForm,
-    color?: PieceColor,
-    affect: RuleAffect
+    color?: PieceColor
 }
 
 export class Rule {
 
-    public form: PieceForm;
-    public color: PieceColor;
-    public affect: RuleAffect;
     private isPieceAffected: (piece: Piece) => boolean;
-    private valid: boolean;
+    private isPieceAgainst: (piece: Piece) => boolean;
+    private valid: boolean;
     private disposition: Array<Array<Type>>;
 
     public constructor (spec: RuleSpec) {
-        this.affect = spec.affect;
-        this.color = spec.color !== undefined ? spec.color : PieceColor.WHITE;
-        this.form = spec.form !== undefined ? spec.form : PieceForm.SQUARE;
         this.valid = false;
-        switch (this.affect) {
-            case RuleAffect.ALL:
-                this.isPieceAffected = function () {
-                    return true;
-                };
-                break;
-            case RuleAffect.COLOR:
-                this.isPieceAffected = function (piece: Piece) {
-                    return piece.color === this.color;
-                };
-                break;
-            case RuleAffect.FORM:
-                this.isPieceAffected = function (piece: Piece) {
-                    return piece.form === this.form;
-                };
-                break;
-            case RuleAffect.FORM_AND_COLOR:
-                this.isPieceAffected = function (piece: Piece) {
-                    return piece.form === this.form && piece.color === this.color;
-                };
-                break;
-            default:
-                this.isPieceAffected = function () {
-                    return false;
-                };
+        this.isPieceAffected = this.buildPieceMatcher(spec.type, false);
+        this.isPieceAgainst = this.buildPieceMatcher(spec.against, true);
+    }
+
+    private buildPieceMatcher(type: PieceType, matchAll: boolean): (piece: Piece) => boolean {
+        if (type === undefined) {
+            return function () {
+                return false;
+            }
+        }
+        if (type.color === undefined && type.form !== undefined) {
+            return function (piece: Piece) {
+                return piece.form === type.form;
+            }
+        }
+        if (type.color !== undefined && type.form === undefined) {
+            return function (piece: Piece) {
+                return piece.color === type.color;
+            }
+        }
+        if (type.color !== undefined && type.form !== undefined) {
+            return function (piece: Piece) {
+                return piece.form === type.form && piece.color === type.color;
+            }
+        }
+        return function () {
+            return matchAll;
         }
     }
 
@@ -65,10 +60,6 @@ export class Rule {
         this.updateDisposition(disposition);
         this.valid = this.checkValidity(disposition);
         return this.valid;
-    }
-
-    private isPieceConflict(piece: Piece): boolean {
-        return false;
     }
 
     private updateDisposition(disposition: Array<Array<Piece>>) {
@@ -83,7 +74,7 @@ export class Rule {
                     if (this.isPieceAffected(p)) {
                         this.disposition[x][y] = Type.MATCHING;
                     } else {
-                        this.disposition[x][y] = this.isPieceConflict(p) ? Type.CONFLICT : Type.OTHER;
+                        this.disposition[x][y] = this.isPieceAgainst(p) ? Type.AGAINST : Type.OTHER;
                     }
                 }
             }
