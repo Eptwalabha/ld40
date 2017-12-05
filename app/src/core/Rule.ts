@@ -241,7 +241,8 @@ export class Rule extends PIXI.Container {
     private getActionDescription(spec: RuleSpec) {
         switch (spec.rule.type) {
             case RuleType.SURROUNDED:
-                return "must be surrounded by";
+                let against = Rule.getAgainstDescription(spec);
+                return `must be surrounded by ${against}`;
             case RuleType.NONE:
                 let against = Rule.getAgainstDescription(spec);
                 return `should not be surrounded by any ${against}`;
@@ -274,3 +275,4 @@ export class Rule extends PIXI.Container {
         return Rule.getSpecDescription(spec.against);
     }
 }
+
