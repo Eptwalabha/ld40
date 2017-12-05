@@ -66,12 +66,12 @@ export class Rule extends PIXI.Container {
         this.spec = spec;
         this.isPieceAffected = this.buildPieceMatcher(spec.type, false);
         this.isPieceAgainst = this.buildPieceMatcher(spec.against, true);
-        this.validator = this.buildValidator(spec.rule);
+        this.validator = Rule.buildValidator(spec.rule);
         this.buildContainer();
         this.active = false;
     }
 
-    private buildValidator(spec: RuleTypeSpec): (x: number, y: number, disposition: Array<Array<RulePieceType>>) => boolean {
+    private static buildValidator(spec: RuleTypeSpec): (x: number, y: number, disposition: Array<Array<RulePieceType>>) => boolean {
         switch (spec.type) {
             case RuleType.NONE:
                 return RuleFactory.get_none(spec.against);
@@ -207,12 +207,12 @@ export class Rule extends PIXI.Container {
     }
 
     public textRule() {
-        let matching: string = this.getSpecDescription(this.spec.type, true);
+        let matching: string = Rule.getSpecDescription(this.spec.type, true);
         let action: string = this.getActionDescription(this.spec);
         return `${matching}\n${action}`;
     }
 
-    private getSpecDescription(type: PieceType, all: boolean = false) {
+    private static getSpecDescription(type: PieceType, all: boolean = false) {
         if (type.color === undefined && type.form === undefined) {
             return `${all? 'all ': ''}pieces`;
         }
@@ -243,34 +243,34 @@ export class Rule extends PIXI.Container {
             case RuleType.SURROUNDED:
                 return "must be surrounded by";
             case RuleType.NONE:
-                let against = this.getAgainstDescription(spec);
+                let against = Rule.getAgainstDescription(spec);
                 return `should not be surrounded by any ${against}`;
             case RuleType.GROUP:
-                return `should be in a group ${this.getRangeDescription(spec.rule.range, spec.type)}`;
+                return `should be in a group ${Rule.getRangeDescription(spec.rule.range, spec.type)}`;
             case RuleType.NEIGHBOURS:
-                let against = this.getAgainstDescription(spec);
+                let against = Rule.getAgainstDescription(spec);
                 return `should have ${spec.rule.amount === undefined ? 8 : spec.rule.amount} ${against} as neighbours.`;
         }
         return "It's a bug!";
     }
 
-    private getRangeDescription(range: RuleRange, type: PieceType) {
+    private static getRangeDescription(range: RuleRange, type: PieceType) {
         if (range.max !== undefined && range.min !== undefined) {
-            return `of ${range.min} to ${range.max} ${this.getSpecDescription(type)}`;
+            return `of ${range.min} to ${range.max} ${Rule.getSpecDescription(type)}`;
         }
         if (range.max !== undefined && range.min === undefined) {
-            return `of ${range.max} ${this.getSpecDescription(type)} maximum`;
+            return `of ${range.max} ${Rule.getSpecDescription(type)} maximum`;
         }
         if (range.max === undefined && range.min !== undefined) {
-            return `of ${range.min} ${this.getSpecDescription(type)} minimum`;
+            return `of ${range.min} ${Rule.getSpecDescription(type)} minimum`;
         }
-        return `of 3 ${this.getSpecDescription(type)} minimum`
+        return `of 3 ${Rule.getSpecDescription(type)} minimum`
     }
 
-    private getAgainstDescription(spec: RuleSpec) {
+    private static getAgainstDescription(spec: RuleSpec) {
         if (spec.rule.against === RuleAgainst.SAME) {
-            return this.getSpecDescription(spec.type);
+            return Rule.getSpecDescription(spec.type);
         }
-        return this.getSpecDescription(spec.against);
+        return Rule.getSpecDescription(spec.against);
     }
 }
