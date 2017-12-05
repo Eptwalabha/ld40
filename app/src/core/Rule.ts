@@ -208,23 +208,25 @@ export class Rule extends PIXI.Container {
 
     public textRule() {
         let matching: string = Rule.getSpecDescription(this.spec.type, true);
-        let action: string = this.getActionDescription(this.spec);
+        let action: string = Rule.getActionDescription(this.spec);
         return `${matching}\n${action}`;
     }
 
-    private static getSpecDescription(type: PieceType, all: boolean = false) {
+    private static getSpecDescription(type: PieceType, every: boolean = false) {
+        let spec: string = '';
         if (type.color === undefined && type.form === undefined) {
-            return `${all? 'all ': ''}pieces`;
+            spec = 'piece';
         }
         if (type.color !== undefined && type.form === undefined) {
-            return `${all? 'all ': ''}${Rule.getColorName(type.color)}`;
+            spec = `${Rule.getColorName(type.color)}`;
         }
         if (type.color === undefined && type.form !== undefined) {
-            return `${all? 'all ': ''}${type.form}`;
+            spec = `${type.form}`;
         }
         if (type.color !== undefined && type.form !== undefined) {
-            return `${all? 'all ': ''}${Rule.getColorName(type.color)} ${type.form}`;
+            spec = `${Rule.getColorName(type.color)} ${type.form}`;
         }
+        return every ? `every ${spec}` : spec;
     }
 
     private static getColorName(color: PieceColor): string {
@@ -238,7 +240,7 @@ export class Rule extends PIXI.Container {
         return "???";
     }
 
-    private getActionDescription(spec: RuleSpec) {
+    private static getActionDescription(spec: RuleSpec) {
         switch (spec.rule.type) {
             case RuleType.SURROUNDED:
                 let against = Rule.getAgainstDescription(spec);
