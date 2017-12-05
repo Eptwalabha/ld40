@@ -52,6 +52,7 @@ window.onload = () => {
     PIXI.loader
         .add("board", "/assets/atlas/board.json")
         .add("piece", "/assets/atlas/piece.json")
+        .add("rule", "/assets/atlas/rule.json")
         .add("ui", "/assets/atlas/ui.json")
         .load(function() {
             let options: PIXI.RendererOptions = {

@@ -19,9 +19,10 @@ export class Board extends PIXI.Container {
     private boardContainer: PIXI.Container;
     private piecesContainer: PIXI.Container;
     private movingPieceContainer: PIXI.Container;
-    private uiContainer: PIXI.Container;
+    private rulesContainer: PIXI.Container;
     private transition: number;
     private gameState: GameState;
+    private levelTitle: PIXI.Text;
 
     constructor(gameState: GameState, level: LevelSpec) {
         super();
@@ -33,10 +34,12 @@ export class Board extends PIXI.Container {
         this.dragging = false;
 
         this.createContainers();
+        this.initTitle(level.name);
         this.initPieces(level.pieces);
         this.initInteractivity();
         this.initBoardContainer();
         this.initRules(level.rules);
+        this.initRulesContainer();
         let self = this;
         this.checkRules(function() { self.allActiveRulesValid() });
     }
@@ -71,7 +74,7 @@ export class Board extends PIXI.Container {
             let piece: Piece = new Piece(this, pieceSpec);
             this.disposition[pieceSpec.position.x][pieceSpec.position.y] = piece;
             this.pieces.push(piece);
-            this.addChild(piece);
+            this.piecesContainer.addChild(piece);
         }
     }
 
@@ -102,41 +105,18 @@ export class Board extends PIXI.Container {
             .on('pointermove', this.dragmove, this);
         this.interactive = true;
     }
+
     private initRules(rules: Array<RuleSpec>) {
         this.rules = [];
         for (let rule of rules) {
             this.rules.push(new Rule(rule));
         }
         this.rules[0].setActive(true);
-        // let ruleSpec: RuleSpec = {
-        //     type: {
-        //         color: PieceColor.RED
-        //     },
-        //     rule: {
-        //         type: RuleType.GROUP,
-        //         range: {
-        //             min: 3
-        //         }
-        //     }
-        // };
-        // let ruleSpec2: RuleSpec = {
-        //     type: {
-        //         color: PieceColor.GREEN
-        //     },
-        //     rule: {
-        //         type: RuleType.NONE
-        //     },
-        //     against: {
-        //         color: PieceColor.BLUE
-        //     }
-        // };
-        // this.rules.push(new Rule(ruleSpec));
-        // this.rules.push(new Rule(ruleSpec2));
     }
 
     private dragstart(event) {
         if (!this.dragging) {
-            let position = event.data.getLocalPosition(this);
+            let position = event.data.getLocalPosition(this.piecesContainer);
             let boardPosition: PIXI.Point = this.positionToBoard(position.x, position.y);
             let piece = this.getPieceAt(boardPosition.x, boardPosition.y);
             if (piece === null || !piece.draggable) {
@@ -162,15 +142,6 @@ export class Board extends PIXI.Container {
         return new PIXI.Point(x2, y2);
     }
 
-    private getPieceAtPosition(x: number, y: number): Piece {
-        let boardPosition: PIXI.Point = this.positionToBoard(x, y);
-        if (boardPosition.x < 0 || boardPosition.x >= this.boardWidth ||
-            boardPosition.y < 0 || boardPosition.y >= this.boardHeight) {
-            return null;
-        }
-        return this.getPieceAt(boardPosition.x, boardPosition.y);
-    }
-
     private getPieceAt(x: number, y: number): Piece {
         return this.disposition[x][y];
     }
@@ -178,7 +149,7 @@ export class Board extends PIXI.Container {
     private dragend(event) {
         if (this.dragging) {
             this.dragging = false;
-            let position = event.data.getLocalPosition(this);
+            let position = event.data.getLocalPosition(this.piecesContainer);
             let boardPosition: PIXI.Point = this.positionToBoard(position.x, position.y, true);
             let piece = this.getPieceAt(boardPosition.x, boardPosition.y);
             if (piece === null) {
@@ -209,7 +180,7 @@ export class Board extends PIXI.Container {
 
     private dragmove(event) {
         if (this.dragging) {
-            let position = event.data.getLocalPosition(this);
+            let position = event.data.getLocalPosition(this.piecesContainer);
             let boardPosition: PIXI.Point = this.positionToBoard(position.x, position.y, true);
             this.selectedPiece.piece.setPosition(boardPosition.x * this.cell.x, boardPosition.y * this.cell.y);
         }
@@ -260,7 +231,14 @@ export class Board extends PIXI.Container {
         this.boardContainer = new PIXI.Container();
         this.piecesContainer = new PIXI.Container();
         this.movingPieceContainer = new PIXI.Container();
-        this.addChild(this.backgroundContainer, this.boardContainer, this.piecesContainer, this.movingPieceContainer);
+        this.rulesContainer = new PIXI.Container();
+        this.addChild(
+            this.backgroundContainer,
+            this.boardContainer,
+            this.piecesContainer,
+            this.movingPieceContainer,
+            this.rulesContainer
+        );
     }
 
     private initBoardContainer() {
@@ -276,6 +254,26 @@ export class Board extends PIXI.Container {
                 this.boardContainer.addChild(tile);
             }
         }
+        this.centerBoard();
+    }
+
+    private centerBoard() {
+        let diffX = ((this.gameState.getWidth() - 200) - this.boardContainer.width) / 2 + 200;
+        let diffY = (this.gameState.getHeight() - this.boardContainer.height) / 2 + 10;
+        this.boardContainer.position.set(diffX + 16, diffY + 16);
+        this.piecesContainer.position.set(diffX + 16, diffY + 16);
+        this.movingPieceContainer.position.set(diffX + 16, diffY + 16);
+        this.levelTitle.position.set(400, 10);
+    }
+
+    private initRulesContainer() {
+        for (let i = 0; i < this.rules.length; ++i) {
+            this.rules[i].position.set(0, i * (this.rules[i].height + 5));
+            this.rulesContainer.addChild(this.rules[i]);
+        }
+        let offsetX = (200 - this.rulesContainer.width) / 2;
+        let offsetY = (this.gameState.getHeight() - this.rulesContainer.height) / 2;
+        this.rulesContainer.position.set(offsetX, offsetY);
     }
 
     private static tileName(piece: Piece): string {
@@ -302,11 +300,21 @@ export class Board extends PIXI.Container {
 
         this.displayVictory(allRules);
         if (allRules) {
-            console.log("end of level");
             this.gameState.nextLevel()
         }
     }
 
     private displayVictory(allRules: boolean) {
+    }
+
+    private initTitle(title: string) {
+        let style = new PIXI.TextStyle({
+            fontSize: 24,
+            fontWeight: 'bold',
+            align: 'center'
+        });
+        this.levelTitle = new PIXI.Text(title, style);
+        this.levelTitle.anchor.set(0.5, 0);
+        this.addChild(this.levelTitle);
     }
 }

@@ -3,7 +3,6 @@ import {State} from "./State";
 export class LoadingState extends State {
 
     init(data?: any): void {
-        console.log("init loading state");
         this.game.changeState("game");
     }
 
@@ -14,7 +13,6 @@ export class LoadingState extends State {
     }
 
     stop(): void {
-        console.log("stop loading state");
     }
 
     pauseState(): void {

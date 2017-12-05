@@ -38,18 +38,11 @@ export class GameState extends State {
     private initScene() {
     }
 
-    private centerBoard(view: HTMLCanvasElement) {
-        let diffX = (view.width - this.board.boardWidth * this.board.cell.x) / 2;
-        let diffY = (view.height - this.board.boardHeight * this.board.cell.y) / 2;
-        this.board.position.x = diffX + 16;
-        this.board.position.y = diffY + 16;
-    }
-
     nextLevel() {
         let levelSpec: LevelSpec = this.getLevelSpec();
         this.board = new Board(this, levelSpec);
+        this.stage.removeChildren();
         this.stage.addChild(this.board);
-        this.centerBoard(this.game.app.view);
     }
 
     private getLevelSpec(): LevelSpec {
@@ -60,7 +53,7 @@ export class GameState extends State {
 
     private makeRandomSpec(): LevelSpec {
         return {
-            name: "this is a random level (it might not work…)",
+            name: "This is a random level\n(it might not work…)",
             pieces: {
                 placed: [],
                 random: [
@@ -101,7 +94,14 @@ export class GameState extends State {
                     }
                 }
             ],
-            boardDimension: new PIXI.Point(10, 10)
+            boardDimension: new PIXI.Point(8, 8)
         };
+    }
+
+    getWidth(): number {
+        return this.game.app.view.width;
+    }
+    getHeight(): number {
+        return this.game.app.view.height;
     }
 }

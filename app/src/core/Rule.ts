@@ -43,7 +43,7 @@ export interface PieceType {
     color?: PieceColor
 }
 
-export class Rule {
+export class Rule extends PIXI.Container {
 
     private isPieceAffected: (piece: Piece) => boolean;
     private isPieceAgainst: (piece: Piece) => boolean;
@@ -52,12 +52,21 @@ export class Rule {
 
     public valid: boolean;
     public active: boolean;
+    private spec: RuleSpec;
+
+    private backCard: PIXI.Sprite;
+    private frontCard: PIXI.Sprite;
+    private imageContainer: PIXI.Container;
+    private textContainer: PIXI.Container;
 
     public constructor (spec: RuleSpec) {
+        super();
         this.valid = false;
+        this.spec = spec;
         this.isPieceAffected = this.buildPieceMatcher(spec.type, false);
         this.isPieceAgainst = this.buildPieceMatcher(spec.against, true);
         this.validator = this.buildValidator(spec.rule);
+        this.buildContainer();
         this.active = false;
     }
 
@@ -146,6 +155,102 @@ export class Rule {
     }
 
     setActive(active: boolean) {
-        this.active = active
+        this.active = active;
+        if (this.active) {
+            this.removeChild(this.backCard);
+        }
+    }
+
+    private buildContainer() {
+        let atlas = PIXI.loader.resources["rule"];
+        this.frontCard = new PIXI.Sprite(atlas.textures["card-front.png"]);
+        this.backCard = new PIXI.Sprite(atlas.textures["card-back.png"]);
+        this.frontCard.scale.set(2.5);
+        this.backCard.scale.set(2.5);
+        this.imageContainer = new PIXI.Container();
+        this.textContainer = new PIXI.Container();
+        let style = new PIXI.TextStyle({
+            fontSize: 20,
+            fontWeight: 'bold',
+            align: 'center',
+            wordWrap: true,
+            wordWrapWidth: 120
+        });
+        let text = new PIXI.Text(this.textRule(), style);
+        text.anchor.set(0.5);
+        text.scale.set(0.25);
+        text.position.set(this.frontCard.width / 5, this.frontCard.height / 5);
+        this.frontCard.addChild(this.imageContainer);
+        this.frontCard.addChild(text);
+        this.addChild(this.frontCard);
+        this.addChild(this.backCard);
+    }
+
+    public textRule() {
+        let matching: string = this.getSpecDescription(this.spec.type, true);
+        let action: string = this.getActionDescription(this.spec);
+        return `${matching}\n${action}`;
+    }
+
+    private getSpecDescription(type: PieceType, all: boolean = false) {
+        if (type.color === undefined && type.form === undefined) {
+            return `${all? 'all ': ''}pieces`;
+        }
+        if (type.color !== undefined && type.form === undefined) {
+            return `${all? 'all ': ''}${Rule.getColorName(type.color)}`;
+        }
+        if (type.color === undefined && type.form !== undefined) {
+            return `${all? 'all ': ''}${type.form}`;
+        }
+        if (type.color !== undefined && type.form !== undefined) {
+            return `${all? 'all ': ''}${Rule.getColorName(type.color)} ${type.form}`;
+        }
+    }
+
+    private static getColorName(color: PieceColor): string {
+        switch (color) {
+            case PieceColor.BLACK: return "black";
+            case PieceColor.WHITE: return "white";
+            case PieceColor.RED: return "red";
+            case PieceColor.GREEN: return "green";
+            case PieceColor.BLUE: return "blue";
+        }
+        return "???";
+    }
+
+    private getActionDescription(spec: RuleSpec) {
+        switch (spec.rule.type) {
+            case RuleType.SURROUNDED:
+                return "must be surrounded by";
+            case RuleType.NONE:
+                let against = this.getAgainstDescription(spec);
+                return `should not be surrounded by any ${against}`;
+            case RuleType.GROUP:
+                return `should be in a group ${this.getRangeDescription(spec.rule.range, spec.type)}`;
+            case RuleType.NEIGHBOURS:
+                let against = this.getAgainstDescription(spec);
+                return `should have ${spec.rule.amount === undefined ? 8 : spec.rule.amount} ${against} as neighbours.`;
+        }
+        return "It's a bug!";
+    }
+
+    private getRangeDescription(range: RuleRange, type: PieceType) {
+        if (range.max !== undefined && range.min !== undefined) {
+            return `of ${range.min} to ${range.max} ${this.getSpecDescription(type)}`;
+        }
+        if (range.max !== undefined && range.min === undefined) {
+            return `of ${range.max} ${this.getSpecDescription(type)} maximum`;
+        }
+        if (range.max === undefined && range.min !== undefined) {
+            return `of ${range.min} ${this.getSpecDescription(type)} minimum`;
+        }
+        return `of 3 ${this.getSpecDescription(type)} minimum`
+    }
+
+    private getAgainstDescription(spec: RuleSpec) {
+        if (spec.rule.against === RuleAgainst.SAME) {
+            return this.getSpecDescription(spec.type);
+        }
+        return this.getSpecDescription(spec.against);
     }
 }
