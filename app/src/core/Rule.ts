@@ -259,7 +259,11 @@ export class Rule extends PIXI.Container {
 
     private static getRangeDescription(range: RuleRange, type: PieceType) {
         if (range.max !== undefined && range.min !== undefined) {
-            return `of ${range.min} to ${range.max} ${Rule.getSpecDescription(type)}`;
+            let a = `${range.min} to ${range.max}`;
+            if (range.max === range.min) {
+                a = `${range.min}`;
+            }
+            return `of ${a} ${Rule.getSpecDescription(type)}`;
         }
         if (range.max !== undefined && range.min === undefined) {
             return `of ${range.max} ${Rule.getSpecDescription(type)} maximum`;
