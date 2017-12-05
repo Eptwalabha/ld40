@@ -40,8 +40,6 @@ export class Board extends PIXI.Container {
         this.initBoardContainer();
         this.initRules(level.rules);
         this.initRulesContainer();
-        let self = this;
-        this.checkRules(function() { self.allActiveRulesValid() });
     }
 
     update (delta: number) {
@@ -103,7 +101,7 @@ export class Board extends PIXI.Container {
         this.on('pointerdown', this.dragstart, this)
             .on('pointerup', this.dragend, this)
             .on('pointermove', this.dragmove, this);
-        this.interactive = true;
+        // this.interactive = true;
     }
 
     private initRules(rules: Array<RuleSpec>) {
@@ -111,7 +109,8 @@ export class Board extends PIXI.Container {
         for (let rule of rules) {
             this.rules.push(new Rule(rule));
         }
-        this.rules[0].setActive(true);
+        this.interactive = false;
+        this.rules[0].setActive(true, this);
     }
 
     private dragstart(event) {
@@ -143,6 +142,9 @@ export class Board extends PIXI.Container {
     }
 
     private getPieceAt(x: number, y: number): Piece {
+        if (x < 0 || x >= this.boardWidth || y < 0 || y >= this.boardHeight) {
+            return null;
+        }
         return this.disposition[x][y];
     }
 
@@ -173,8 +175,7 @@ export class Board extends PIXI.Container {
                 let y = this.selectedPiece.origin.y * this.cell.y;
                 this.selectedPiece.piece.setPosition(x, y);
             }
-            let self = this;
-            this.checkRules(function() { self.allActiveRulesValid() });
+            this.checkRules();
         }
     }
 
@@ -186,7 +187,7 @@ export class Board extends PIXI.Container {
         }
     }
 
-    private checkRules(callback: () => void) {
+    private checkRules() {
         this.resetAllPiecesMood();
         let allRulesValid = true;
         for (let rule of this.rules) {
@@ -197,7 +198,7 @@ export class Board extends PIXI.Container {
             }
         }
         if (allRulesValid) {
-            callback();
+            this.allActiveRulesValid();
         }
     }
 
@@ -285,14 +286,15 @@ export class Board extends PIXI.Container {
 
     private allActiveRulesValid() {
         for (let piece of this.pieces) {
-            piece.setMood(PieceMood.HAPPY, true);
+            piece.setMood(PieceMood.CHEERING, true);
             this.transition = 2000;
         }
 
         let allRules = true;
         for (let rule of this.rules) {
             if (rule.active === false) {
-                rule.setActive(true);
+                this.interactive = false;
+                rule.setActive(true, this);
                 allRules = false;
                 break;
             }
@@ -302,6 +304,11 @@ export class Board extends PIXI.Container {
         if (allRules) {
             this.gameState.nextLevel()
         }
+    }
+
+    public activateRule () {
+        this.interactive = true;
+        this.checkRules();
     }
 
     private displayVictory(allRules: boolean) {

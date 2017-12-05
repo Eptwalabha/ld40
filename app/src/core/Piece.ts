@@ -18,6 +18,7 @@ export enum PieceColor {
 export enum PieceMood {
     NEUTRAL,
     HAPPY,
+    CHEERING,
     ANGRY
 }
 
@@ -83,17 +84,21 @@ export class Piece extends PIXI.Container {
             this.rotation = Math.sin(this.deltaValue * 20) / 5;
             this.offset.set(0, 0);
         } else if (this.mood === PieceMood.HAPPY) {
+            this.rotation = Math.sin(this.deltaValue * 5) / 5;
+            this.offset.set(0, 0);
+        } else if (this.mood === PieceMood.CHEERING) {
             let sin = Math.sin(this.deltaValue * 10);
             this.rotation = sin / 5;
             this.offset.y = -Math.abs(sin * (this.board.cell.y / 2));
-            // this.offset.x = sin * (this.board.cell.y / 3);
         } else {
             this.rotation = 0;
             this.offset.set(0, 0);
         }
         this.x = this.origin.x + this.offset.x;
         this.y = this.origin.y + this.offset.y;
-        this.blink();
+        if (this.mood !== PieceMood.CHEERING && this.mood !== PieceMood.HAPPY) {
+            this.blink();
+        }
     }
 
     private blink () {
@@ -153,7 +158,7 @@ export class Piece extends PIXI.Container {
 
     private eyeType() {
         if (this.mood === PieceMood.ANGRY) return "eye-angry.png";
-        if (this.mood === PieceMood.HAPPY) return "eye-happy.png";
+        if (this.mood === PieceMood.HAPPY || this.mood === PieceMood.CHEERING) return "eye-happy.png";
         return "eye-regular.png";
     }
 }

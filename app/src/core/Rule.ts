@@ -1,5 +1,6 @@
 import {Piece, PieceForm, PieceColor, PieceMood} from "./Piece";
 import {RuleFactory} from "./RuleFactory";
+import {Board} from "./Board";
 
 export enum RulePieceType {
     EMPTY,
@@ -154,10 +155,29 @@ export class Rule extends PIXI.Container {
         return valid;
     }
 
-    setActive(active: boolean) {
-        this.active = active;
-        if (this.active) {
-            this.removeChild(this.backCard);
+    setActive(active: boolean, board: Board) {
+        if (active) {
+            this.backCard.tint = 0xaaffaa;
+            let style = new PIXI.TextStyle({
+                fontSize: 32,
+                fill: 0xffffff,
+                fontWeight: 'bold',
+                align: 'center'
+            });
+            let clickMe = new PIXI.Text("CLICK ME", style);
+            clickMe.anchor.set(0.5);
+            clickMe.scale.set(0.25);
+            clickMe.position.set(this.frontCard.width / 5, this.frontCard.height / 5);
+            let self = this;
+            this.backCard.addChild(clickMe);
+            this.backCard.interactive = true;
+            this.backCard.on('pointerdown', function () {
+                self.active = true;
+                board.activateRule();
+                self.backCard.interactive = false;
+                self.backCard.on('pointerdown', null);
+                self.removeChild(self.backCard)
+            });
         }
     }
 
