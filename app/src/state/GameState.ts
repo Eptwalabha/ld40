@@ -53,12 +53,12 @@ export class GameState extends State {
 
     private makeRandomSpec(): LevelSpec {
         return {
-            name: "This is a random level\n(it might not work…)",
+            name: "This is a generated level\n(it will not work…)",
             pieces: {
                 placed: [],
                 random: [
                     {
-                        amount: 50
+                        amount: 40
                     }
                 ]
             },
@@ -94,7 +94,7 @@ export class GameState extends State {
                     }
                 }
             ],
-            boardDimension: new PIXI.Point(8, 8)
+            boardDimension: new PIXI.Point(7, 7)
         };
     }
 

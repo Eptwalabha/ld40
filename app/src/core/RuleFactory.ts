@@ -97,14 +97,13 @@ export class RuleFactory {
             let cells: Array<Array<Cell>> = [];
             for (let i = 0; i < disposition.length; ++i) {
                 cells[i] = [];
-                for (let j = 0; j < disposition.length; ++j) {
+                for (let j = 0; j < disposition[i].length; ++j) {
+                    cells[i][j] = null;
                     if (disposition[i][j] === type) {
                         cells[i][j] = {
                             visited: false,
                             amount: 1
                         }
-                    } else {
-                        cells[i][j] = null;
                     }
                 }
             }

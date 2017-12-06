@@ -146,7 +146,7 @@ export class Rule extends PIXI.Container {
     private checkValidity(disposition: Array<Array<Piece>>) {
         let valid: boolean = true;
         for (let x = 0; x < this.disposition.length; ++x) {
-            for (let y = 0; y < this.disposition.length; ++y) {
+            for (let y = 0; y < this.disposition[x].length; ++y) {
                 if (this.disposition[x][y] !== RulePieceType.MATCHING) continue;
                 let p = disposition[x][y];
                 if (this.validator(x, y, this.disposition)) {

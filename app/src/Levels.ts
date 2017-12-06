@@ -14,18 +14,18 @@ export interface PiecesSpec {
 }
 
 let level1: LevelSpec = {
-    name: "rule n°1:\nthere are no rules",
+    name: "First title",
     pieces: {
         placed: [
             {
                 form: PieceForm.CIRCLE,
                 color: PieceColor.RED,
-                position: new PIXI.Point(0, 0)
+                position: new PIXI.Point(1, 0)
             },
             {
                 form: PieceForm.SQUARE,
                 color: PieceColor.RED,
-                position: new PIXI.Point(2, 0)
+                position: new PIXI.Point(3, 0)
             }
         ],
         random: []
@@ -43,10 +43,10 @@ let level1: LevelSpec = {
             }
         }
     ],
-    boardDimension: new PIXI.Point(3, 1)
+    boardDimension: new PIXI.Point(4, 1)
 };
 let level2: LevelSpec = {
-    name: "rule n°2:\nbut rules stack up",
+    name: "Rules stack up",
     pieces: {
         placed: [
             {
@@ -64,6 +64,7 @@ let level2: LevelSpec = {
             },
             {
                 color: PieceColor.BLUE,
+                form: PieceForm.STAR,
                 amount: 5
             },
             {
@@ -107,7 +108,224 @@ let level2: LevelSpec = {
     ],
     boardDimension: new PIXI.Point(5, 5)
 };
-let level3: LevelSpec = {
+let level_tuto_rules: LevelSpec = {
+    name: "Well… that changes everything",
+    pieces: {
+        placed: [
+            {
+                form: PieceForm.CIRCLE,
+                color: PieceColor.RED,
+                position: new PIXI.Point(0, 0)
+            },
+            {
+                form: PieceForm.STAR,
+                color: PieceColor.BLUE,
+                position: new PIXI.Point(1, 0)
+            },
+            {
+                form: PieceForm.CIRCLE,
+                color: PieceColor.RED,
+                position: new PIXI.Point(3, 0)
+            },
+            {
+                form: PieceForm.SQUARE,
+                color: PieceColor.RED,
+                position: new PIXI.Point(4, 0)
+            }
+        ],
+        random: []
+    },
+    rules: [
+        {
+            type: {
+                color: PieceColor.RED
+            },
+            rule: {
+                type: RuleType.GROUP,
+                range: {
+                    min: 2
+                }
+            }
+        },
+        {
+            type: {
+                color: PieceColor.RED,
+                form: PieceForm.SQUARE
+            },
+            rule: {
+                type: RuleType.NEIGHBOURS,
+                against: RuleAgainst.AGAINST,
+                amount: 2
+            },
+            against: {
+                form: PieceForm.CIRCLE
+            }
+        },
+        {
+            type: {
+                color: PieceColor.BLUE,
+                form: PieceForm.STAR
+            },
+            rule: {
+                type: RuleType.SURROUNDED,
+                against: RuleAgainst.AGAINST
+            },
+            against: {
+                color: PieceColor.RED
+            }
+        }
+    ],
+    boardDimension: new PIXI.Point(5, 1)
+};
+let level_block: LevelSpec = {
+    name: "Party pooper",
+    boardDimension: new PIXI.Point(6, 3),
+    pieces: {
+        placed: [
+            {
+                form: PieceForm.TRIANGLE,
+                color: PieceColor.WHITE,
+                position: new PIXI.Point(1, 1),
+                draggable: false
+            },
+            {form: PieceForm.CIRCLE, color: PieceColor.RED,   position: new PIXI.Point(3, 0)},
+            {form: PieceForm.SQUARE, color: PieceColor.GREEN, position: new PIXI.Point(4, 0)},
+            {form: PieceForm.CIRCLE, color: PieceColor.RED,   position: new PIXI.Point(5, 0)},
+            {form: PieceForm.SQUARE, color: PieceColor.RED,   position: new PIXI.Point(3, 1)},
+            {form: PieceForm.CIRCLE, color: PieceColor.GREEN, position: new PIXI.Point(5, 1)},
+            {form: PieceForm.SQUARE, color: PieceColor.GREEN, position: new PIXI.Point(3, 2)},
+            {form: PieceForm.CIRCLE, color: PieceColor.RED,   position: new PIXI.Point(4, 2)},
+            {form: PieceForm.SQUARE, color: PieceColor.GREEN, position: new PIXI.Point(5, 2)}
+        ],
+        random: []
+    },
+    rules: [
+        {
+            type: {
+                color: PieceColor.RED
+            },
+            rule: {
+                type: RuleType.GROUP,
+                range: {
+                    min: 4,
+                    max: 4
+                }
+            }
+        },
+        {
+            type: {
+                form: PieceForm.SQUARE
+            },
+            rule: {
+                type: RuleType.GROUP,
+                range: {
+                    min: 4,
+                    max: 4
+                }
+            }
+        },
+        {
+            type: {
+                form: PieceForm.TRIANGLE,
+                color: PieceColor.WHITE
+            },
+            rule: {
+                type: RuleType.SURROUNDED,
+                against: RuleAgainst.AGAINST
+            },
+            against: {
+            }
+        }
+    ]
+};
+let level_tuto_group_1: LevelSpec = {
+    name: "SELECT *\nFROM TABLE \nGROUP BY blue",
+    pieces: {
+        placed: [],
+        random: [
+            {
+                form: PieceForm.STAR,
+                color: PieceColor.BLUE,
+                amount: 5
+            },
+            {
+                form: PieceForm.SQUARE,
+                color: PieceColor.BLUE,
+                amount: 5
+            }
+        ]
+    },
+    rules: [
+        {
+            type: {
+                color: PieceColor.BLUE
+            },
+            rule: {
+                type: RuleType.GROUP,
+                range: {
+                    min: 3
+                }
+            }
+        },
+        {
+            type: {
+                form: PieceForm.STAR
+            },
+            rule: {
+                type: RuleType.GROUP,
+                range: {
+                    max: 1
+                }
+            }
+        }
+    ],
+    boardDimension: new PIXI.Point(5, 5)
+};
+let level_tuto_group_2: LevelSpec = {
+    name: "Time with Bermuda",
+    pieces: {
+        placed: [],
+        random: [
+            {
+                form: PieceForm.TRIANGLE,
+                color: PieceColor.GREEN,
+                amount: 4
+            },
+            {
+                form: PieceForm.SQUARE,
+                color: PieceColor.GREEN,
+                amount: 2
+            }
+        ]
+    },
+    rules: [
+        {
+            type: {
+                color: PieceColor.GREEN
+            },
+            rule: {
+                type: RuleType.GROUP,
+                range: {
+                    min: 3,
+                    max: 3
+                }
+            }
+        },
+        {
+            type: {
+                form: PieceForm.TRIANGLE
+            },
+            rule: {
+                type: RuleType.GROUP,
+                range: {
+                    max: 1
+                }
+            }
+        }
+    ],
+    boardDimension: new PIXI.Point(2, 5)
+};
+let black_sheep: LevelSpec = {
     name: 'Black sheep',
     boardDimension: new PIXI.Point(5, 5),
     pieces: {
@@ -166,14 +384,13 @@ let level3: LevelSpec = {
                 amount: 2
             },
             against: {
-                color: PieceColor.WHITE,
                 form: PieceForm.CIRCLE
             }
         }
     ]
 };
-let level4: LevelSpec = {
-    name: "among the stars",
+let among_the_star: LevelSpec = {
+    name: "Among the stars",
     boardDimension: new PIXI.Point(7, 7),
     pieces: {
         placed: [
@@ -227,7 +444,7 @@ let level4: LevelSpec = {
         }
     ]
 };
-let level5: LevelSpec = {
+let rouge_one: LevelSpec = {
     name: "Rouge one is worthless",
     boardDimension: new PIXI.Point(4, 4),
     pieces: {
@@ -298,7 +515,7 @@ let level5: LevelSpec = {
         }
     ]
 };
-let level6: LevelSpec = {
+let no_name: LevelSpec = {
     name: 'I cannot find a name for this one',
     boardDimension: new PIXI.Point(4, 4),
     pieces: {
@@ -361,7 +578,7 @@ let level6: LevelSpec = {
         }
     ]
 };
-let level7: LevelSpec = {
+let matriochkas: LevelSpec = {
     name: 'Matriochkas!',
     boardDimension: new PIXI.Point(7, 7),
     pieces: {
@@ -450,9 +667,13 @@ let level7: LevelSpec = {
 export var levels: Array<LevelSpec> = [
     level1,
     level2,
-    level3,
-    level4,
-    level5,
-    level6,
-    level7
+    level_tuto_rules,
+    level_block,
+    level_tuto_group_1,
+    level_tuto_group_2,
+    black_sheep,
+    among_the_star,
+    rouge_one,
+    no_name,
+    matriochkas
 ];
