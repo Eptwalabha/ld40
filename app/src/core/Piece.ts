@@ -161,4 +161,12 @@ export class Piece extends PIXI.Container {
         if (this.mood === PieceMood.HAPPY || this.mood === PieceMood.CHEERING) return "eye-happy.png";
         return "eye-regular.png";
     }
+
+    cheering(allRules: boolean): boolean {
+        if (allRules || this.mood === PieceMood.HAPPY) {
+            this.setMood(PieceMood.CHEERING, true);
+            return true;
+        }
+        return this.mood === PieceMood.CHEERING;
+    }
 }

@@ -285,33 +285,29 @@ export class Board extends PIXI.Container {
 
 
     private allActiveRulesValid() {
-        for (let piece of this.pieces) {
-            piece.setMood(PieceMood.CHEERING, true);
-            this.transition = 2000;
-        }
-
         let allRules = true;
+        this.interactive = false;
         for (let rule of this.rules) {
             if (rule.active === false) {
-                this.interactive = false;
                 rule.setActive(true, this);
                 allRules = false;
                 break;
             }
         }
 
-        this.displayVictory(allRules);
+        this.cheerPieces(allRules);
+
         if (allRules) {
-            this.gameState.nextLevel()
+            let self = this;
+            window.setTimeout(function () {
+                self.gameState.nextLevel();
+            }, 2000);
         }
     }
 
     public activateRule () {
         this.interactive = true;
         this.checkRules();
-    }
-
-    private displayVictory(allRules: boolean) {
     }
 
     private initTitle(title: string) {
@@ -323,5 +319,21 @@ export class Board extends PIXI.Container {
         this.levelTitle = new PIXI.Text(title, style);
         this.levelTitle.anchor.set(0.5, 0);
         this.addChild(this.levelTitle);
+    }
+
+    private cheerPieces(allRulesSatisfied: boolean) {
+        let atLeastOneCheering = false;
+        for (let piece of this.pieces) {
+            if (piece.cheering(allRulesSatisfied)) {
+                atLeastOneCheering = true;
+            }
+            this.transition = 2000;
+        }
+
+        if (!atLeastOneCheering) {
+            for (let piece of this.pieces) {
+                piece.setMood(PieceMood.CHEERING, true);
+            }
+        }
     }
 }

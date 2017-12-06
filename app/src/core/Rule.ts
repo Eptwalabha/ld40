@@ -116,6 +116,11 @@ export class Rule extends PIXI.Container {
     public checkDispositionAgainstRule(disposition: Array<Array<Piece>>): boolean {
         this.updateDisposition(disposition);
         this.valid = this.checkValidity(disposition);
+        if (this.active) {
+            this.frontCard.tint = this.valid ? 0xccffcc : 0xffcccc;
+        } else {
+            this.frontCard.tint = 0xffffff;
+        }
         return this.valid;
     }
 
@@ -159,7 +164,7 @@ export class Rule extends PIXI.Container {
         if (active) {
             this.backCard.tint = 0xaaffaa;
             let style = new PIXI.TextStyle({
-                fontSize: 32,
+                fontSize: 28,
                 fill: 0xffffff,
                 fontWeight: 'bold',
                 align: 'center'
