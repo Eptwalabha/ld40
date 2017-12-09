@@ -239,7 +239,7 @@ let level_block: LevelSpec = {
     ]
 };
 let level_tuto_group_1: LevelSpec = {
-    name: "SELECT *\nFROM TABLE \nGROUP BY blue",
+    name: "SELECT *\nFROM TABLE ld40\nGROUP BY blue",
     pieces: {
         placed: [],
         random: [

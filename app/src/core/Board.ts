@@ -18,7 +18,6 @@ export class Board extends PIXI.Container {
     private backgroundContainer: PIXI.Container;
     private boardContainer: PIXI.Container;
     private piecesContainer: PIXI.Container;
-    private movingPieceContainer: PIXI.Container;
     private rulesContainer: PIXI.Container;
     private transition: number;
     private gameState: GameState;
@@ -57,6 +56,7 @@ export class Board extends PIXI.Container {
         this.resetDisposition();
         this.initPlacedPieces(spec.placed);
         this.initRandomPieces(spec.random);
+        this.sortZIndex();
     }
 
     private resetDisposition() {
@@ -129,6 +129,7 @@ export class Board extends PIXI.Container {
             };
             this.dragging = true;
             this.hoveredPiece = null;
+            this.sortZIndex();
         }
     }
 
@@ -160,6 +161,7 @@ export class Board extends PIXI.Container {
                 this.selectedPiece.piece.setPosition(x, y);
             }
             this.hoveredPiece = null;
+            this.sortZIndex();
             this.checkRules();
         }
     }
@@ -173,13 +175,13 @@ export class Board extends PIXI.Container {
                 if (Board.canPieceBeSwapped(previouslyHoveredPiece, this.selectedPiece.piece)) {
                     let x = this.hover.x * this.cell.x;
                     let y = this.hover.y * this.cell.y;
-                    previouslyHoveredPiece.transitionTo(x, y, .3);
+                    previouslyHoveredPiece.transitionTo(x, y, .2);
                 }
                 let newlyHoveredPiece: Piece = this.getPieceAt(boardPosition.x, boardPosition.y);
                 if (Board.canPieceBeSwapped(newlyHoveredPiece, this.selectedPiece.piece)) {
                     let x = this.selectedPiece.origin.x * this.cell.x;
                     let y = this.selectedPiece.origin.y * this.cell.y;
-                    newlyHoveredPiece.transitionTo(x, y, .3);
+                    newlyHoveredPiece.transitionTo(x, y, .2);
                     this.hoveredPiece = newlyHoveredPiece;
                 }
                 this.hover.set(boardPosition.x, boardPosition.y);
@@ -251,13 +253,11 @@ export class Board extends PIXI.Container {
         this.backgroundContainer = new PIXI.Container();
         this.boardContainer = new PIXI.Container();
         this.piecesContainer = new PIXI.Container();
-        this.movingPieceContainer = new PIXI.Container();
         this.rulesContainer = new PIXI.Container();
         this.addChild(
             this.backgroundContainer,
             this.boardContainer,
             this.piecesContainer,
-            this.movingPieceContainer,
             this.rulesContainer
         );
     }
@@ -283,7 +283,6 @@ export class Board extends PIXI.Container {
         let diffY = (this.gameState.getHeight() - this.boardContainer.height) / 2 + 10;
         this.boardContainer.position.set(diffX + 16, diffY + 16);
         this.piecesContainer.position.set(diffX + 16, diffY + 16);
-        this.movingPieceContainer.position.set(diffX + 16, diffY + 16);
         this.levelTitle.position.set(400, 10);
     }
 
@@ -363,5 +362,15 @@ export class Board extends PIXI.Container {
 
     private static canPieceBeSwapped(piece: Piece, pieceOrign: Piece) {
         return piece !== null && piece.draggable && piece.name !== pieceOrign.name;
+    }
+
+    private sortZIndex () {
+        let self = this;
+        this.piecesContainer.children.sort(function (pA: Piece, pB: Piece) {
+            if (self.selectedPiece && pA === self.selectedPiece.piece) return 1;
+            if (pA.y < pB.y) return -1;
+            if (pA.y > pB.y) return 1;
+            return 0
+        });
     }
 }
