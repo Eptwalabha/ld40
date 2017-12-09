@@ -23,6 +23,8 @@ export class Board extends PIXI.Container {
     private transition: number;
     private gameState: GameState;
     private levelTitle: PIXI.Text;
+    private hover: PIXI.Point;
+    private hoveredPiece: Piece;
 
     constructor(gameState: GameState, level: LevelSpec) {
         super();
@@ -32,6 +34,7 @@ export class Board extends PIXI.Container {
 
         this.cell = new PIXI.Point(40, 40);
         this.dragging = false;
+        this.hover = new PIXI.Point(-1, -1);
 
         this.createContainers();
         this.initTitle(level.name);
@@ -126,26 +129,8 @@ export class Board extends PIXI.Container {
                 origin: boardPosition
             };
             this.dragging = true;
+            this.hoveredPiece = null;
         }
-    }
-
-    private positionToBoard(x: number, y: number, bound: boolean = false): PIXI.Point {
-        let x2 = Math.floor((x + this.cell.x / 2) / this.cell.x);
-        let y2 = Math.floor((y + this.cell.y / 2) / this.cell.y);
-        if (bound) {
-            if (x2 < 0) x2 = 0;
-            if (x2 >= this.boardWidth) x2 = this.boardWidth - 1;
-            if (y2 < 0) y2 = 0;
-            if (y2 >= this.boardHeight) y2 = this.boardHeight - 1;
-        }
-        return new PIXI.Point(x2, y2);
-    }
-
-    private getPieceAt(x: number, y: number): Piece {
-        if (x < 0 || x >= this.boardWidth || y < 0 || y >= this.boardHeight) {
-            return null;
-        }
-        return this.disposition[x][y];
     }
 
     private dragend(event) {
@@ -175,7 +160,9 @@ export class Board extends PIXI.Container {
                 let y = this.selectedPiece.origin.y * this.cell.y;
                 this.selectedPiece.piece.setPosition(x, y);
             }
+            this.hoveredPiece = null;
             this.checkRules();
+            this.alinePieces();
         }
     }
 
@@ -183,8 +170,43 @@ export class Board extends PIXI.Container {
         if (this.dragging) {
             let position = event.data.getLocalPosition(this.piecesContainer);
             let boardPosition: PIXI.Point = this.positionToBoard(position.x, position.y, true);
+            if (boardPosition.x !== this.hover.x || boardPosition.y !== this.hover.y) {
+                let previouslyHoveredPiece: Piece = this.getPieceAt(this.hover.x, this.hover.y);
+                if (Board.canPieceBeSwapped(previouslyHoveredPiece, this.selectedPiece.piece)) {
+                    let x = this.hover.x * this.cell.x;
+                    let y = this.hover.y * this.cell.y;
+                    previouslyHoveredPiece.transitionTo(x, y, .3, false);
+                }
+                let newlyHoveredPiece: Piece = this.getPieceAt(boardPosition.x, boardPosition.y);
+                if (Board.canPieceBeSwapped(newlyHoveredPiece, this.selectedPiece.piece)) {
+                    let x = this.selectedPiece.origin.x * this.cell.x;
+                    let y = this.selectedPiece.origin.y * this.cell.y;
+                    newlyHoveredPiece.transitionTo(x, y, .3, true);
+                    this.hoveredPiece = newlyHoveredPiece;
+                }
+                this.hover.set(boardPosition.x, boardPosition.y);
+            }
             this.selectedPiece.piece.setPosition(boardPosition.x * this.cell.x, boardPosition.y * this.cell.y);
         }
+    }
+
+    private positionToBoard(x: number, y: number, bound: boolean = false): PIXI.Point {
+        let x2 = Math.floor((x + this.cell.x / 2) / this.cell.x);
+        let y2 = Math.floor((y + this.cell.y / 2) / this.cell.y);
+        if (bound) {
+            if (x2 < 0) x2 = 0;
+            if (x2 >= this.boardWidth) x2 = this.boardWidth - 1;
+            if (y2 < 0) y2 = 0;
+            if (y2 >= this.boardHeight) y2 = this.boardHeight - 1;
+        }
+        return new PIXI.Point(x2, y2);
+    }
+
+    private getPieceAt(x: number, y: number): Piece {
+        if (!this.withinBoard(x, y)) {
+            return null;
+        }
+        return this.disposition[x][y];
     }
 
     private checkRules() {
@@ -333,6 +355,25 @@ export class Board extends PIXI.Container {
         if (!atLeastOneCheering) {
             for (let piece of this.pieces) {
                 piece.setMood(PieceMood.CHEERING, true);
+            }
+        }
+    }
+
+    private withinBoard(x: number, y: number) {
+        return x >= 0 && x < this.boardWidth && y >= 0 && y < this.boardHeight;
+    }
+
+    private static canPieceBeSwapped(piece: Piece, pieceOrign: Piece) {
+        return piece !== null && piece.draggable && piece.name !== pieceOrign.name;
+    }
+
+    private alinePieces() {
+        for (let x = 0; x < this.disposition.length; ++x) {
+            for (let y = 0; y < this.disposition[x].length; ++y) {
+                let p: Piece = this.disposition[x][y];
+                if (p !== null && !p.isInTransition()) {
+                    p.setPosition(x * this.cell.x, y * this.cell.y);
+                }
             }
         }
     }

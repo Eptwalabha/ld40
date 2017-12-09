@@ -1,4 +1,5 @@
 import {Board} from "./Board";
+import {Transition} from "./Transition";
 
 export enum PieceForm {
     SQUARE = 'square',
@@ -54,8 +55,9 @@ export class Piece extends PIXI.Container {
     public draggable: boolean;
     public satisfy: boolean;
     private offset: PIXI.Point;
+    private transition: Transition;
 
-    constructor(board: Board, spec: PieceSpec) {
+    constructor(board: Board, spec: PieceSpec) {
         super();
         this.form = spec.form;
         this.color = spec.color;
@@ -67,6 +69,7 @@ export class Piece extends PIXI.Container {
         this.name = this.board.getId();
         this.spec = spec;
         this.offset = new PIXI.Point();
+        this.transition = new Transition();
 
         this.deltaValue = Math.random() * 1000;
         this.buildPIXIContainer();
@@ -80,6 +83,19 @@ export class Piece extends PIXI.Container {
     public update(delta) {
         this.deltaValue += delta;
         this.blinkIn -= delta;
+        this.updateTransition(delta);
+        this.updateRotation();
+        this.updatePosition();
+        this.blink();
+    }
+
+    private updateTransition(delta: number) {
+        if (this.transition.active) {
+            this.transition.update(delta);
+        }
+    }
+
+    private updateRotation() {
         if (this.mood === PieceMood.ANGRY) {
             this.rotation = Math.sin(this.deltaValue * 20) / 5;
             this.offset.set(0, 0);
@@ -94,19 +110,25 @@ export class Piece extends PIXI.Container {
             this.rotation = 0;
             this.offset.set(0, 0);
         }
+    }
+
+    private updatePosition() {
         this.x = this.origin.x + this.offset.x;
         this.y = this.origin.y + this.offset.y;
-        if (this.mood !== PieceMood.CHEERING && this.mood !== PieceMood.HAPPY) {
-            this.blink();
+        if (this.transition.active) {
+            this.x += this.transition.dX;
+            this.y += this.transition.dY;
         }
     }
 
     private blink () {
-        if (this.blinkIn < 0) {
-            this.eyes.texture = PIXI.loader.resources["piece"].textures[this.eyeType()];
-            this.blinkIn = Math.random() * 10;
-        } else if (this.blinkIn < .1) {
-            this.eyes.texture = PIXI.loader.resources["piece"].textures["eye-blink.png"];
+        if (this.mood !== PieceMood.CHEERING && this.mood !== PieceMood.HAPPY) {
+            if (this.blinkIn < 0) {
+                this.eyes.texture = PIXI.loader.resources["piece"].textures[this.eyeType()];
+                this.blinkIn = Math.random() * 10;
+            } else if (this.blinkIn < .1) {
+                this.eyes.texture = PIXI.loader.resources["piece"].textures["eye-blink.png"];
+            }
         }
     }
 
@@ -114,6 +136,7 @@ export class Piece extends PIXI.Container {
         this.x = x;
         this.y = y;
         this.origin.set(this.x, this.y);
+        this.transition.reset();
     }
 
     private buildPIXIContainer() {
@@ -168,5 +191,16 @@ export class Piece extends PIXI.Container {
             return true;
         }
         return this.mood === PieceMood.CHEERING;
+    }
+
+    transitionTo(x: number, y: number, duration: number, forward: boolean) {
+        let dx = forward ? x - this.x : this.x - x;
+        let dy = forward ? y - this.y : this.y - y;
+        this.transition.setup(dx, dy, duration, forward);
+        this.transition.active = true;
+    }
+
+    isInTransition(): boolean {
+        return this.transition.active;
     }
 }
