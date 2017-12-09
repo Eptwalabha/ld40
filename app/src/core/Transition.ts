@@ -1,42 +1,45 @@
 export class Transition {
 
     private delta: PIXI.Point;
+    public from: PIXI.Point;
     private duration: number;
     private time: number;
+    private active: boolean;
 
-    public active: boolean;
     public dX: number;
     public dY: number;
-
     public onEnd: () => void;
-    private keepActive: boolean;
+
 
     constructor () {
         this.delta = new PIXI.Point();
+        this.from = new PIXI.Point();
         this.dX = 0;
         this.dY = 0;
         this.active = false;
-        this.keepActive = false;
     }
 
-    setup(dx: number, dy: number, duration: number, forward: boolean) {
-        this.delta.set(dx, dy);
+    superSetup(from: PIXI.Point, to: PIXI.Point, position: PIXI.Point, duration) {
+        this.from.set(from.x - position.x, from.y - position.y);
+        this.delta.x = to.x - from.x;
+        this.delta.y = to.y - from.y;
         this.duration = duration;
         this.time = 0;
-        this.keepActive = forward;
+        this.active = true;
     }
 
     public update(delta) {
+        if (!this.active) {
+            return;
+        }
         this.time += delta;
         if (this.time < this.duration) {
-            let dx = Transition.easeOutQuad(this.time, this.delta.x, this.duration);
-            let dy = Transition.easeOutQuad(this.time, this.delta.y, this.duration);
-            this.dX = this.keepActive ? dx : this.delta.x - dx;
-            this.dY = this.keepActive ? dy : this.delta.y - dy;
+            this.dX = this.from.x + Transition.easeOutQuad(this.time, this.delta.x, this.duration);
+            this.dY = this.from.y + Transition.easeOutQuad(this.time, this.delta.y, this.duration);
         } else {
-            this.dX = this.keepActive ? this.delta.x : 0;
-            this.dY = this.keepActive ? this.delta.y : 0;
-            this.active = this.keepActive;
+            this.dX = this.from.x + this.delta.x;
+            this.dY = this.from.y + this.delta.y;
+            this.active = false;
             if (this.onEnd) {
                 this.onEnd();
             }
@@ -61,6 +64,7 @@ export class Transition {
     reset() {
         this.dX = 0;
         this.dY = 0;
+        this.from.set(0, 0);
         this.active = false;
     }
 }

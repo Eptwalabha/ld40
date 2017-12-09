@@ -104,7 +104,6 @@ export class Board extends PIXI.Container {
         this.on('pointerdown', this.dragstart, this)
             .on('pointerup', this.dragend, this)
             .on('pointermove', this.dragmove, this);
-        // this.interactive = true;
     }
 
     private initRules(rules: Array<RuleSpec>) {
@@ -162,7 +161,6 @@ export class Board extends PIXI.Container {
             }
             this.hoveredPiece = null;
             this.checkRules();
-            this.alinePieces();
         }
     }
 
@@ -175,18 +173,18 @@ export class Board extends PIXI.Container {
                 if (Board.canPieceBeSwapped(previouslyHoveredPiece, this.selectedPiece.piece)) {
                     let x = this.hover.x * this.cell.x;
                     let y = this.hover.y * this.cell.y;
-                    previouslyHoveredPiece.transitionTo(x, y, .3, false);
+                    previouslyHoveredPiece.transitionTo(x, y, .3);
                 }
                 let newlyHoveredPiece: Piece = this.getPieceAt(boardPosition.x, boardPosition.y);
                 if (Board.canPieceBeSwapped(newlyHoveredPiece, this.selectedPiece.piece)) {
                     let x = this.selectedPiece.origin.x * this.cell.x;
                     let y = this.selectedPiece.origin.y * this.cell.y;
-                    newlyHoveredPiece.transitionTo(x, y, .3, true);
+                    newlyHoveredPiece.transitionTo(x, y, .3);
                     this.hoveredPiece = newlyHoveredPiece;
                 }
                 this.hover.set(boardPosition.x, boardPosition.y);
+                this.selectedPiece.piece.transitionTo(boardPosition.x * this.cell.x, boardPosition.y * this.cell.y, .1);
             }
-            this.selectedPiece.piece.setPosition(boardPosition.x * this.cell.x, boardPosition.y * this.cell.y);
         }
     }
 
@@ -365,16 +363,5 @@ export class Board extends PIXI.Container {
 
     private static canPieceBeSwapped(piece: Piece, pieceOrign: Piece) {
         return piece !== null && piece.draggable && piece.name !== pieceOrign.name;
-    }
-
-    private alinePieces() {
-        for (let x = 0; x < this.disposition.length; ++x) {
-            for (let y = 0; y < this.disposition[x].length; ++y) {
-                let p: Piece = this.disposition[x][y];
-                if (p !== null && !p.isInTransition()) {
-                    p.setPosition(x * this.cell.x, y * this.cell.y);
-                }
-            }
-        }
     }
 }

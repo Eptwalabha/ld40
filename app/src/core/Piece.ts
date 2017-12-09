@@ -46,7 +46,6 @@ export class Piece extends PIXI.Container {
     private sprite: PIXI.Sprite;
     private eyes: PIXI.Sprite;
     private blinkIn: number;
-    private tint: number;
     private mood: PieceMood;
     private spec: PieceSpec;
     private origin: PIXI.Point;
@@ -90,9 +89,7 @@ export class Piece extends PIXI.Container {
     }
 
     private updateTransition(delta: number) {
-        if (this.transition.active) {
-            this.transition.update(delta);
-        }
+        this.transition.update(delta);
     }
 
     private updateRotation() {
@@ -113,12 +110,8 @@ export class Piece extends PIXI.Container {
     }
 
     private updatePosition() {
-        this.x = this.origin.x + this.offset.x;
-        this.y = this.origin.y + this.offset.y;
-        if (this.transition.active) {
-            this.x += this.transition.dX;
-            this.y += this.transition.dY;
-        }
+        this.x = this.origin.x + this.offset.x + this.transition.dX;
+        this.y = this.origin.y + this.offset.y + this.transition.dY;
     }
 
     private blink () {
@@ -150,15 +143,6 @@ export class Piece extends PIXI.Container {
         this.eyes.scale.set(0.8);
         this.eyes.position.set(0, this.sprite.height / -3);
         this.addChild(this.sprite, this.eyes);
-    }
-
-    public changeTint (tint?: number) {
-        if (tint === undefined) {
-            this.sprite.tint = this.color;
-        } else {
-            this.tint = tint;
-            this.sprite.tint = tint;
-        }
     }
 
     public setMood(mood: PieceMood = PieceMood.NEUTRAL, force: boolean = false) {
@@ -193,14 +177,12 @@ export class Piece extends PIXI.Container {
         return this.mood === PieceMood.CHEERING;
     }
 
-    transitionTo(x: number, y: number, duration: number, forward: boolean) {
-        let dx = forward ? x - this.x : this.x - x;
-        let dy = forward ? y - this.y : this.y - y;
-        this.transition.setup(dx, dy, duration, forward);
-        this.transition.active = true;
-    }
-
-    isInTransition(): boolean {
-        return this.transition.active;
+    transitionTo(x: number, y: number, duration: number) {
+        this.transition.superSetup(
+            new PIXI.Point(this.x, this.y),
+            new PIXI.Point(x, y),
+            this.origin,
+            duration
+        );
     }
 }
